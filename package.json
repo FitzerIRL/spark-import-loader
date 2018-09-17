@@ -1,0 +1,44 @@
+{
+  "main": "index.js",
+  "name": "spark-import-loader",
+  "author": {
+    "name": "Hugh Fitzpatrick",
+    "url": "https://github.com/FitzerIRL"
+  },
+  "contributors": [
+    {
+      "name": "Hugh Fitzpatrick",
+      "url": "https://github.com/FitzerIRL"
+    }
+  ],
+  "deprecated": false,
+  "description": "Import Loader for Spark (www.pxscene.org) - to support detection of 'px.import(..)' files in WebPack builds.",
+  "version": "1.0.0",
+  "keywords": [
+    "bash",
+    "Spark",
+    "loader",
+    "resource",
+    "file"
+  ],
+  "files": [
+    "index.js",
+    "src",
+    "test"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "babel-jest": "^23.6.0",
+    "babel-preset-env": "^1.7.0",
+    "jest": "^23.6.0",
+    "memory-fs": "^0.4.1",
+    "webpack": "^4.18.0"
+  },
+  "jest": {
+    "bail": false
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {}
+}

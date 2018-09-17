@@ -1,0 +1,1 @@
+module.exports = require('./src/spark-import-loader.js');
