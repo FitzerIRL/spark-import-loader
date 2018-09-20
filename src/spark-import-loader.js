@@ -84,7 +84,7 @@ function parseImports(base, str)
 
         importVar = matchImports[2];
         // console.log("## PROMISE var: " + importVar)
-        
+
         var matchList = reJsonList.exec(matchImports[0]);  // Found import list
         if(matchList !== null)
         {
@@ -152,23 +152,23 @@ function parseImports(base, str)
         if(importList.length > 0)
         {
             // Create '__webpack_require__()' in place of 'px.import()' of modules
-            importList.map( (obj,i) => 
+            importList.map( (obj,i) =>
             {
-                prefix += "\n  " + importVar + "." + obj.token + " = __webpack_require__('./" + obj.path + "')";
+                prefix += "\n  " + importVar + "." + obj.token + " = requre('./" + obj.path + "')";
             })
             prefix+= "\n\n";
 
             myStr = myStr.replace(matchImports[0], matchImports[0] + prefix);
 
-            importList.map( (obj,i) => 
+            importList.map( (obj,i) =>
             {
-                myStr = myStr.replace(obj.line, " \\\\ __SPARK_IMPORT_LOADER__ " + obj.line);
+                myStr = myStr.replace(obj.line, " // __SPARK_IMPORT_LOADER__ " + obj.line);
             })
         }
     }
 
 //    console.log(" -------- prefix: \n\n" + prefix);
-   console.log(" -------- RESULT: \n\n" + myStr);
+//    console.log(" -------- RESULT: \n\n" + myStr);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     return myStr;
