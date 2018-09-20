@@ -46,10 +46,10 @@ function resolveBase(base, str)
 
 /*
 
-px.import({ scene:      'px:scene.1.js',
-             keys:      'px:tools.keys.js',
-             ListBox: 'browser:listbox.js',
-             EditBox: 'browser:editbox.js'
+px.import({ scene:     'px:scene.1.js',
+            keys:      'px:tools.keys.js',
+            ListBox:   'utils:browser:listbox.js',
+            EditBox:   'utils:test:browser:editbox.js'
 }).then( function importsAreReady(imports)
 {
 
@@ -62,93 +62,114 @@ px.import({ scene:      'px:scene.1.js',
 
 function parseImports(base, str)
 {
-    var reJson = /.*\.import\s*\(\s*\{([^}]*)\}\s*\).*/g;
+    var rePxImport = /.*px\.import\s*\(\s*\{([^}]*?)\}\s*\).then\s*\(.*\((.*)\)[^{]*\{/g;
+    var reJsonList = /.*\(\s*\{([^}]*)\}\s*\).*/g;
+    var reJsonPair = /\s*([^:]*)\:\s*([^,]*),?/g;
+
     var myStr  = str; // to modify param
 
     var myImports = [];
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    var m = null;
+    var matchImports = null;
 
-    do
+    var importVar  = ""
+    var importList = [];
+
+    matchImports = rePxImport.exec(myStr);  // Found 'px.import()' statement
+    if (matchImports !== null)
     {
-        m = reJson.exec(myStr);
-        if (m !== null)
+        // console.log("## REGEX: " + matchImports[1]);
+
+        importVar = matchImports[2];
+        // console.log("## PROMISE var: " + importVar)
+        
+        var matchList = reJsonList.exec(matchImports[0]);  // Found import list
+        if(matchList !== null)
         {
-            try
+            // console.log("## JSON: " + matchList[1]);
+
+            var matchPair = null;
+            while( (matchPair = reJsonPair.exec(matchImports[1])) !== null)
             {
-                var raw = m[1];
-                    raw = raw.replace(/ /g,  "");
-                    raw = raw.replace(/\n/g, "");
+                // console.log("## IMPORT LINE: " + matchPair[0]);
 
-                var props = raw.split(',');
+                var line  = matchPair[0];
+                var token = matchPair[1];
+                var value = matchPair[2];
 
-                // Parse JSON (ish) string to Object
-                props.map(p =>
+                // whitespace
+                line = line.trim();
+
+                // single quotes
+                value = value.replace(/\'/g, "");
+
+                // double quotes
+                value = value.replace(/\"/g, "");
+
+                // newlines
+                value = value.replace(/\n/g, "");
+
+                // Found import list
+                if(value.startsWith("px:"))
                 {
-                    var tup = p.split(':');
-                    var obj = {};
+                    continue; // SKIP px imports
+                }
+                else
+                {
+                    //console.log("##  PAIR: " + token + " >> "+ value);
+                    var pxPath = value.split(':');
 
-                    if(tup && tup.length == 3)
+                    var filePath = "";
+                    pxPath.map( (v,i) =>
                     {
-                        var ref = tup[0];
-                        var key = tup[1].replace(/^\s+|\s+$/g, "");
-                        var val = tup[2].replace(/^\s+|\s+$/g, "");
+                        filePath += v;
+                        if(v.indexOf(".") < 0 )
+                            filePath += "/";
+                    })
 
-                        // commas
-                        key = key.replace(/,/g, "");
-                        val = val.replace(/,/g, "");
+                    importList.push({ token: token, line: line, path: filePath});
 
-                        // // single quotes
-                        key = key.replace(/\'/g, "");
-                        val = val.replace(/\'/g, "");
-
-                        // // double quotes
-                        key = key.replace(/\"/g, "");
-                        val = val.replace(/\"/g, "");
-
-                        obj['ref'] = ref;
-                        obj['key'] = key;
-                        obj['val'] = val;
-
-                        if(key !== 'px') // built-in import ... SKIP !
-                        {
-                            if(typeof(obj.ref) !== 'undefined')
-                            {
-                                obj.key = resolveBase(base, obj.key);
-                            }
-
-                            myImports.push(obj)
-                        }
-                    }
-                    // else
-                    // {
-                    //     console.log("## props >> props: " + props.length);
-                    //     props.map( (pp, i) => { console.log("## props >> pp["+i+"]: " + pp);})
-                    //     console.log("## BAD >> m[1]: " + m[1]);
-                    // }
-                });//map
-            }
-            catch(e)
-            {
-                console.log( "## FATAL:  Parse failed ! - "+ m.length + "\n" + "\n Error: [" + e + "]" );
-            }
+                    //console.log("##  PATH: " + filePath);
+                }
+            }//WHILE
         }
-    } while (m);
-
+        else
+        {
+            console.log("## JSON: ** NOT FOUND ** ");
+        }
+    }//ENDIF
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Assemble resulting prefix...
     //
-    var prefix = ""
 
-    myImports.map( ( i, n) => { prefix += "var " + i.ref + "__ = require('./" + i.key + "/" + i.val + "'); // ## __spark-import-loader__ ## \n" })
+    if(matchImports !== null)
+    {
+        var prefix = ""
 
-    prefix += "\n\n"
+        if(importList.length > 0)
+        {
+            // Create '__webpack_require__()' in place of 'px.import()' of modules
+            importList.map( (obj,i) => 
+            {
+                prefix += "\n  " + importVar + "." + obj.token + " = __webpack_require__('./" + obj.path + "')";
+            })
+            prefix+= "\n\n";
 
-    //console.log(" -------- prefix: \n\n" + prefix);
+            myStr = myStr.replace(matchImports[0], matchImports[0] + prefix);
+
+            importList.map( (obj,i) => 
+            {
+                myStr = myStr.replace(obj.line, " \\\\ __SPARK_IMPORT_LOADER__ " + obj.line);
+            })
+        }
+    }
+
+//    console.log(" -------- prefix: \n\n" + prefix);
+   console.log(" -------- RESULT: \n\n" + myStr);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    return prefix + myStr;
+    return myStr;
 }

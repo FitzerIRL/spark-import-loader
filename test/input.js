@@ -8,8 +8,8 @@ px.configImport({"browser:" : "browser/"});
 
 px.import({  scene:      'px:scene.1.js',
               keys:      'px:tools.keys.js',
-              ListBox: 'browser:listbox.js',
-              EditBox: 'browser:editbox.js'
+              ListBox:   'utils:browser:listbox.js',  FooBox:   'utils:browser:Foobox.js',
+              EditBox:   'utils:test:browser:editbox.js'
 }).then( function importsAreReady(imports)
 {
   var url   = "";
@@ -18,6 +18,9 @@ px.import({  scene:      'px:scene.1.js',
   var scene = imports.scene;
   var keys  = imports.keys;
   var root  = imports.scene.root;
+
+  var ListBox  = imports.ListBox;
+  var EditBox  = imports.EditBox;
 
   // MORE CODE
   // MORE CODE
