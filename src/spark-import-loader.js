@@ -154,7 +154,7 @@ function parseImports(base, str)
             // Create '__webpack_require__()' in place of 'px.import()' of modules
             importList.map( (obj,i) =>
             {
-                prefix += "\n  " + importVar + "." + obj.token + " = requre('./" + obj.path + "')";
+                prefix += "\n  " + importVar + "." + obj.token + " = require('./" + obj.path + "')";
             })
             prefix+= "\n\n";
 
