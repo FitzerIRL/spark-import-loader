@@ -1,4 +1,5 @@
-const loaderUtils = require("loader-utils");
+const loaderUtils    = require("loader-utils");
+const removeComments = require('remove-comments');
 
 module.exports = function(source, map) {
 
@@ -6,7 +7,7 @@ module.exports = function(source, map) {
 
     console.log("SPARK IMPORT LOADER: " + JSON.stringify(options) + "\n");
 
-    var newSource = source; // copy to modify
+    var newSource = removeComments(source); // copy to modify
 
     newSource = parseImports(options.base, newSource); // modifies string
 
