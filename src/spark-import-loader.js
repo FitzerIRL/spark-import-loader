@@ -1,15 +1,19 @@
 const loaderUtils    = require("loader-utils");
 const removeComments = require('remove-comments');
 
-module.exports = function(source, map) {
+module.exports = function(source, map){
+
+    console.log("SPARK IMPORT LOADER: ");
+
+    // this.addDependency(loaderUtils);
+    // this.addDependency(removeComments);
 
     const options = loaderUtils.getOptions(this);
 
     console.log("SPARK IMPORT LOADER: " + JSON.stringify(options) + "\n");
 
     var newSource = removeComments(source); // copy to modify
-
-    newSource = parseImports(options.base, newSource); // modifies string
+        newSource = parseImports(options.base, newSource); // modifies string
 
     this.callback(
         null,
@@ -67,20 +71,15 @@ function parseImports(base, str)
     var reJsonList = /.*\(\s*\{([^}]*)\}\s*\).*/g;
     var reJsonPair = /\s*([^:]*)\:\s*([^,]*),?/g;
 
-    var myStr  = str; // to modify param
-
-    var myImports = [];
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    var myStr = str; // to modify param
 
     var matchImports = null;
-
-    var importVar  = ""
-    var importList = [];
-
-    matchImports = rePxImport.exec(myStr);  // Found 'px.import()' statement
-    if (matchImports !== null)
+ 
+    while((matchImports = rePxImport.exec(myStr)) != null)// Found 'px.import()' statement
     {
+        var importVar  = ""
+        var importList = [];
+
         // console.log("## REGEX: " + matchImports[1]);
 
         importVar = matchImports[2];
@@ -118,6 +117,12 @@ function parseImports(base, str)
                     continue; // SKIP px imports
                 }
                 else
+                if(value == "optimus" || value == "ws" || value == "http"|| value == "https")
+                {
+                    // console.log("##  SKIP: " + token + " >> "+ value);
+                    continue; // SKIP 'allowed' modules
+                }
+                else
                 {
                     //console.log("##  PAIR: " + token + " >> "+ value);
                     var pxPath = value.split(':');
@@ -140,34 +145,34 @@ function parseImports(base, str)
         {
             console.log("## JSON: ** NOT FOUND ** ");
         }
-    }//ENDIF
 
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Assemble resulting prefix...
-    //
 
-    if(matchImports !== null)
-    {
-        var prefix = ""
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Assemble resulting prefix...
+        //
 
-        if(importList.length > 0)
+        if(matchImports !== null)
         {
-            // Create '__webpack_require__()' in place of 'px.import()' of modules
-            importList.map( (obj,i) =>
-            {
-                prefix += "\n  " + importVar + "." + obj.token + " = require('./" + obj.path + "')";
-            })
-            prefix+= "\n\n";
+            var prefix = ""
 
-            myStr = myStr.replace(matchImports[0], matchImports[0] + prefix);
-
-            importList.map( (obj,i) =>
+            if(importList.length > 0)
             {
-                myStr = myStr.replace(obj.line, " // __SPARK_IMPORT_LOADER__ " + obj.line);
-            })
+                // Create '__webpack_require__()' in place of 'px.import()' of modules
+                importList.map( (obj,i) =>
+                {
+                    prefix += "\n  " + importVar + "." + obj.token + " = require('./" + obj.path + "')";
+                })
+                prefix+= "\n\n";
+
+                myStr = myStr.replace(matchImports[0], matchImports[0] + prefix);
+
+                importList.map( (obj,i) =>
+                {
+                    myStr = myStr.replace(obj.line, " // __SPARK_IMPORT_LOADER__ " + obj.line);
+                })
+            }
         }
-    }
-
+    }//WHILE
 //    console.log(" -------- prefix: \n\n" + prefix);
 //    console.log(" -------- RESULT: \n\n" + myStr);
 
