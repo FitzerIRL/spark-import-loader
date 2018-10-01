@@ -13,7 +13,7 @@
   ],
   "deprecated": false,
   "description": "Import Loader for Spark (www.pxscene.org) - to support detection of 'px.import(..)' files in WebPack builds.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "keywords": [
     "bash",
     "Spark",
@@ -21,6 +21,9 @@
     "resource",
     "file"
   ],
+  "directories": {
+    "test": "test"
+  },
   "files": [
     "index.js",
     "src",
@@ -32,13 +35,12 @@
     "babel-preset-env": "^1.7.0",
     "jest": "^23.6.0",
     "memory-fs": "^0.4.1",
-    "webpack": "^4.18.0"
-  },
-  "jest": {
-    "bail": false
+    "webpack": "^4.20.2"
   },
   "scripts": {
     "test": "jest"
   },
-  "dependencies": {}
+  "dependencies": {
+    "remove-comments": "^1.0.0"
+  }
 }
